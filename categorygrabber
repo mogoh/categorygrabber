@@ -8,7 +8,7 @@ from copy import deepcopy
 import getopt
 import sys
 
-def grab(members, category, baseurl, request, recursive):
+def grab(members, category, baseurl, request, recursive, verbose):
     if recursive:
         request["cmtype"] = "subcat"
         requestparsed = urllib.parse.urlencode(request)
@@ -24,11 +24,15 @@ def grab(members, category, baseurl, request, recursive):
                 category2 = membertitle
                 request2 = deepcopy(request)
                 request2["cmtitle"] = category2
-                grab([], category2, baseurl, request2, recursive)
+                grab([], category2, baseurl, request2, recursive, verbose)
 
     request["cmtype"] = "page"
     requestparsed = urllib.parse.urlencode(request)
     url = baseurl+"?"+requestparsed
+    if verbose:
+        print("================================================================================")
+        print(category)
+        print(url)
     xmlstring = urllib.request.urlopen(url).read()
     api = ET.fromstring(xmlstring)
     query = api.find("query")
@@ -45,10 +49,12 @@ def grab(members, category, baseurl, request, recursive):
     if continuecat != None:
         cmcontinue = continuecat.attrib["cmcontinue"]
         request["cmcontinue"] = cmcontinue
-        grab(members, category, baseurl, request, recursive)
+        grab(members, category, baseurl, request, recursive, verbose)
     
     members = "\n".join(members)
     filename = re.sub(r"\/", r"_", category)
+    if verbose:
+        print(members)
     with open(filename+".txt", "w") as text_file:
         print(members, file=text_file)
 
@@ -67,6 +73,7 @@ Usage:
                         "Kategorie:" is necessary.
 -r --recursive          If the recursuve-flag is given, the search will be
                         recursive through all sub-categorys.
+-v --verbose            I'll tell you, what I am doing!
 Example:
 categorygrabber -w https://en.wikipedia.org -c Category:Offspring_of_Gaia -r
 """
@@ -74,7 +81,7 @@ categorygrabber -w https://en.wikipedia.org -c Category:Offspring_of_Gaia -r
 
 def main():
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "w:c:hr", ["wiki=", "help", "category", "recusive"])
+        opts, args = getopt.getopt(sys.argv[1:], "w:c:hrv", ["wiki=", "help", "category", "recusive", "verbose"])
     except getopt.GetoptError as err:
         print(err)
         usage()
@@ -82,6 +89,7 @@ def main():
     wiki = "https://de.wikipedia.org"
     category = ""
     recursive = False
+    verbose = False
     for o, a in opts:
         if o == "-v":
             verbose = True
@@ -94,6 +102,8 @@ def main():
             category = a
         elif o in ("-r", "--recursive"):
             recursive = True
+        elif o in ("-v", "--verbose"):
+            verbose = True
         else:
             assert False, "unhandled option"
     baseurl = wiki+"/w/api.php"
@@ -103,7 +113,7 @@ def main():
     "format" : "xml",
     "cmtitle" : category,
     "cmlimit" : "500"}
-    grab([], category, baseurl, request, recursive)
+    grab([], category, baseurl, request, recursive, verbose)
 
 if __name__ == "__main__":
     main()
