@@ -38,7 +38,8 @@ def grab(members, category, baseurl, request, recursive):
     for member in cm:
         membertitle = member.attrib["title"]
         membertitle = re.sub(r" \(.+\)$", r"", membertitle)
-        members.append(membertitle)
+        if "Liste " not in membertitle:
+            members.append(membertitle)
     
     continuecat = api.find("continue")
     if continuecat != None:
