@@ -9,12 +9,6 @@ import getopt
 import sys
 
 def grab(members, category, baseurl, request, recursive):
-    print("========================================================")
-    print(category)
-    print(baseurl)
-    print(request)
-    print("========================================================")
-
     if recursive:
         request["cmtype"] = "subcat"
         requestparsed = urllib.parse.urlencode(request)
@@ -32,7 +26,6 @@ def grab(members, category, baseurl, request, recursive):
                 request2["cmtitle"] = category2
                 grab([], category2, baseurl, request2, recursive)
 
-    #print(request["cmtitle"])
     request["cmtype"] = "page"
     requestparsed = urllib.parse.urlencode(request)
     url = baseurl+"?"+requestparsed
@@ -54,7 +47,6 @@ def grab(members, category, baseurl, request, recursive):
         grab(members, category, baseurl, request, recursive)
     
     members = "\n".join(members)
-    #print(members)
     filename = re.sub(r"\/", r"_", category)
     with open(filename+".txt", "w") as text_file:
         print(members, file=text_file)
@@ -84,7 +76,7 @@ def main():
         opts, args = getopt.getopt(sys.argv[1:], "w:c:hr", ["wiki=", "help", "category", "recusive"])
     except getopt.GetoptError as err:
         print(err)
-        #usage()
+        usage()
         sys.exit(2)
     wiki = "https://de.wikipedia.org"
     category = ""
